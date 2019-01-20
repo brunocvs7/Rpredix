@@ -14,7 +14,8 @@ library(urca)
 library(forecast)
 library(tidyverse)
 library(tseries)
-
+library(imputeTS)
+library(plotly)
 ##### 1
 
 # Reading a CSV file in which We have our time series
@@ -45,7 +46,12 @@ time_series_df2$V2 %>% statsNA()
 
 # Ploting the data
 
-ggplot(time_series_df, aes(V1, V2)) + geom_line() + xlab("Date") + ylab("Daily Consumption Before 2018")
+plot_ly(time_series_df1, x = ~time_series_df1$V1, y = ~time_series_df1$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
+  layout(xaxis = list(type = "category"))
+
+plot_ly(time_series_df2, x = ~time_series_df2$V1, y = ~time_series_df2$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
+  layout(xaxis = list(type = "category"))
+
 
 ggplot(time_series_df2, aes(V1, V2)) + geom_line() + xlab("Date") + ylab("Daily Consumption in 2018")
 
@@ -56,5 +62,8 @@ data_training <- handleNA(time_series_df1, action = "remove")
 data_test <- handleNA(time_series_df2, action = "remove")
 
 
-ggplot(data_test[200:275,], aes(V1, V2)) + geom_line() + xlab("Date") + ylab("Daily Consumption in 2018")
+
+p <- plot_ly(data_test, x = ~data_test$V1, y = ~data_test$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
+  layout(xaxis = list(type = "category"))
+
 
