@@ -1,0 +1,5 @@
+ARnet <- function(s, lag){
+  
+  
+  
+}

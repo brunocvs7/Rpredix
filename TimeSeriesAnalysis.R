@@ -4,12 +4,17 @@
 # 2- Data preparation
   #2.1 Missing Values Treatment
   #2.2 Outlier Treatment
-  #2.3 
+# 3 - Data discovery
+  #3.1 ANalysig the stationarity
+  #3.2 Analysing the autorcorrelation and partial autocorrelation
+
 
 
 # Importing the packages needed to perform the analysis
 
 source('handleNA.R')
+source('checkStat.R')
+source('lags.R')
 library(urca)
 library(forecast)
 library(tidyverse)
@@ -25,6 +30,7 @@ time_series_df <- read.csv2(file, sep = ";",header = FALSE,
         na.strings = c("0", "-1", "NA", "-"))
 time_series_df <- time_series_df %>% select(c(1,2))
 
+time_series_df <- time_series_df %>% arrange(time_series_df$V1)
 #FOrmating the dataframe
 
 time_series_df$V1 <- time_series_df$V1 %>% as.Date()
@@ -49,11 +55,9 @@ time_series_df2$V2 %>% statsNA()
 plot_ly(time_series_df1, x = ~time_series_df1$V1, y = ~time_series_df1$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
   layout(xaxis = list(type = "category"))
 
-plot_ly(time_series_df2, x = ~time_series_df2$V1, y = ~time_series_df2$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
+plot_ly(time_series_df2, x = ~time_series_df2$V1[1:30], y = ~time_series_df2$V2[1:30], name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
   layout(xaxis = list(type = "category"))
 
-
-ggplot(time_series_df2, aes(V1, V2)) + geom_line() + xlab("Date") + ylab("Daily Consumption in 2018")
 
 
 # Missing Values Treatment
@@ -66,4 +70,26 @@ data_test <- handleNA(time_series_df2, action = "remove")
 p <- plot_ly(data_test, x = ~data_test$V1, y = ~data_test$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
   layout(xaxis = list(type = "category"))
 
+p
+# Check the stationarity of the time-series.
+
+checkStat(data_test$V2)   # Once our cases lies in case 2, Let's consider our time-series stationary
+
+# Analysing the autocorrelation function and partial autocorrelation function 
+
+lags(data_test$V2)
+
+# forecasting with aut.arima
+
+fit <- auto.arima(data_test$V2, seasonal = TRUE)
+
+fcast <- forecast(fit, h = 100)
+
+plot(fcast)
+
+# forecasting with HoltWinter
+
+ga_ts <- ts(data_test$V2, start = c(2011,31), end = c(2017,31), frequency = 365)
+forecast1 <- HoltWinters(ga_ts)
+yy <- forecast(forecast1, h = 30)
 
