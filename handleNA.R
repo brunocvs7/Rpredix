@@ -1,4 +1,4 @@
- handleNA <- function(data, action = "remove", s= FALSE, plot = FALSE){
+ handleNA <- function(data, action = "remove", s= FALSE){
    #This function require two arguments:
    #First argument is the data set,that is a df
    #with the first columns beeing the time and the second one beeing 
@@ -12,7 +12,11 @@
    #Finally the df is return containing the time in the 1st column
    #and the values in the second column
    
-    if (action == "remove"){
+   data = data
+   action = action
+   s = s
+   
+   if (action == "remove"){
       
       data<- data %>% na.omit()
     } else{
@@ -21,31 +25,77 @@
           
           library(imputeTS)
           library(DMwR)
-          ylocf <- na.locf(data[,2], option = "locf")
+          library(dplyr)
+         #Generate NA samples in the dataset to test the best impute model
+          data1 <- na.omit(data)
+          random <- sample_frac(as.data.frame(data1$V2), 0.2)
+          rows <- as.numeric(rownames(random))
+          actuals <- data1$V2
+          data2 <- actuals
+          data2[rows] <- NA
           
-          ynocb <- na.locf(data[,2], option = "nocb")
+          #Here We teste the best model 
+         
+          ylocf <- na.locf(data2, option = "locf")
           
-          yli <- na.interpolation(data[,2], option = "linear")
+          ynocb <- na.locf(data2, option = "nocb")
           
-          yspl <- na.interpolation(data[,2], option = "spline")
+          yli <- na.interpolation(data2, option = "linear")
+          
+          yspl <- na.interpolation(data2, option = "spline")
           
           imputs <- data.frame(ylocf, ynocb, yli, yspl)
-          errors_metrics <- apply(imputs, 2, regr.eval, data$V1)
-         y <- errors_metrics[3,] %>%  which.max() %>% imputs[]
-         RMSE <- errors_metrics[3,] %>% which.max() %>% errors_metrics
+          errors_metrics <- apply(imputs, 2, regr.eval, actuals)
+          y <- errors_metrics[3,] %>%  which.min()
+          
+          if (y == 1){
+            data$V2 = na.locf(data$V2, option = "locf")
+          } else if (y == 2){
+            data$V2 = na.locf(data$V2, option = "nocb")
+          }else if (y == 3){
+            data$V2 = na.interpolation(data$V2, option = "linear")
+          } else{ data$V2 = na.interpolation(data$V2, option = "spline")}
          
           
-        }
+        } else {
           
-            
-      
-      
-      
+          
+          library(imputeTS)
+          library(DMwR)
+          library(dplyr)
+          #Generate NA samples in the dataset to test the best impute model
+          
+          data1 <- na.omit(data)
+          random <- sample_frac(as.data.frame(data1$V2), 0.2)
+          rows <- as.numeric(rownames(random))
+          actuals <- data1$V2
+          data2 <- actuals
+          data2[rows] <- NA
+          
+          ylocf <- na.seadec(data2, algorithm = "locf")
+          
+          ynocb <- na.seadec(data2,algorithm =  "nocb")
+          
+          yli <- na.seadec(data2, algorithm = "interpolation")
+          
+          imputs <- data.frame(ylocf, ynocb)
+          errors_metrics <- apply(imputs, 2, regr.eval, actuals)
+          y <- errors_metrics[3,] %>%  which.min()
+          
+          if (y == 1){
+            data$V2 = na.locf(data$V2, option = "locf")
+          } else if (y == 2){
+            data$V2 = na.locf(data$V2, option = "nocb")
+          }else{
+            data$V2 = na.interpolation(data$V2, option = "linear")
+          }
+          
+        }
       
     }
    
    
    
-   return()
+   return(data)
  }
  
