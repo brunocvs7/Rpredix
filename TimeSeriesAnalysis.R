@@ -15,6 +15,8 @@
 source('handleNA.R')
 source('checkStat.R')
 source('lags.R')
+source('ARnet.R')
+source('RNA.R')
 library(urca)
 library(forecast)
 library(tidyverse)
@@ -40,6 +42,7 @@ time_series_df$V2 <- as.character(time_series_df$V2) %>%  as.numeric()
 time_series_df1 <- time_series_df[time_series_df$V1 < "2018-01-01",]
 time_series_df2 <- time_series_df[time_series_df$V1> "2017-12-31",]
 time_series_df2$V2 <- ifelse(time_series_df2$V2 == 0, NA,time_series_df2$V2 )
+time_series_df$V2 <- ifelse(time_series_df$V2 == 0, NA,time_series_df$V2 )
 ##### 2
 
 # Seeing if there is some NA values in the time series
@@ -55,7 +58,7 @@ time_series_df2$V2 %>% statsNA()
 plot_ly(time_series_df1, x = ~time_series_df1$V1, y = ~time_series_df1$V2, name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
   layout(xaxis = list(type = "category"))
 
-plot_ly(time_series_df2, x = ~time_series_df2$V1[1:30], y = ~time_series_df2$V2[1:30], name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
+plot_ly(time_series_df2, x = ~time_series_df2$V1[1:15], y = ~time_series_df2$V2[1:15], name = 'Time series plot', type = 'scatter', mode = 'lines') %>% 
   layout(xaxis = list(type = "category"))
 
 
@@ -85,11 +88,13 @@ fit <- auto.arima(data_test$V2, seasonal = TRUE)
 
 fcast <- forecast(fit, h = 100)
 
+
 plot(fcast)
 
 # forecasting with HoltWinter
 
 ga_ts <- ts(data_test$V2, start = c(2011,31), end = c(2017,31), frequency = 365)
 forecast1 <- HoltWinters(ga_ts)
-yy <- forecast(forecast1, h = 30)
+yy <- forecast(forecast1, h = 1)
+plot(yy$mean)
 
